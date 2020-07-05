@@ -56,58 +56,60 @@ SELECT * FROM Author WHERE date_of_birth = '1771-08-15';
 SELECT * FROM Book WHERE YEAR(publishing_year) = 2001;
 
 --#7 SELECT GROUP BY
---min orders from all customers
 
+--Таблица с клиентами с минимальной покупкой от 50
 SELECT id_customer, MIN(total)
 FROM Booking
 GROUP BY id_customer
 HAVING MIN(total) > 50;
 
---max total from customers by date
+-- Максимальная покупка по каждой дате
 SELECT date_of_order AS OrderDate, MAX(total) AS MaxTotal
 FROM Booking
 GROUP BY date_of_order;
 
---avg order from all customers
+-- Средний чек покупки среди всех покупателей
 SELECT id_customer AS CUSTOMER_ID, AVG(total) AS Average_total
 FROM Booking
 GROUP BY id_customer;
 
---sum profit from all customers > 100
+-- Суммарная прибыль с клиентов с покупками более, чем на 100
 SELECT id_customer, SUM(total) AS SUMMARY
 FROM Booking
 GROUP BY id_customer
 HAVING SUM(total) > 100;
 
+--Таблица с продажами по каждому месяцу
 SELECT MONTH(date_of_order) AS MonthNumber, SUM(total) AS AllSales
 FROM Booking
 GROUP BY date_of_order;
 
+--Таблица с клиентами со средним чеком > 150
 SELECT id_customer, AVG(total) AS Average
 FROM Booking
 GROUP BY id_customer
 HAVING AVG(total) > 150;
 
 --# SELECT JOIN
---get a list of books of target author
+--Получить список книг автора Данте Агильери
 SELECT a.name, a.surname, b.name
 FROM Author as a
 LEFT JOIN Book as b ON a.id_author = b.id_author
 WHERE a.name = 'Dante' AND a.surname = 'Alighieri';
 
---top 2 authors ordered by name
+--Топ 2 самых продаваемых авторов
 SELECT TOP 2 b.id_author, a.surname, a.name, a.date_of_birth, a.date_of_death
 FROM Author as a
 RIGHT JOIN Book AS b ON b.id_author = a.id_author
 ORDER BY name ASC;
 
---men who did booking in april 2020
+--Мужчины, купившие что-либо в апреле
 SELECT c.name, b.date_of_order
 FROM Customer as c
 RIGHT JOIN Booking as b ON c.id_customer = b.id_customer
 WHERE c.sex = 'male';
 
---customers - books publisher's name
+--Книг производителя купил клиент
 SELECT c.name AS CustomerName, p.name AS PublisherName
 FROM Customer AS c
 LEFT JOIN Booking AS b ON c.id_customer = b.id_customer
@@ -116,7 +118,7 @@ LEFT JOIN Book AS bk ON bo.id_book = bk.id_book
 LEFT JOIN Publisher AS p ON bk.id_publisher = p.id_publisher
 WHERE c.id_customer = 3 AND bk.id_book = 5 AND p.id_publisher = 5;
 
---Authors and their books
+--Авторы и их книги
 SELECT *
 FROM Author FULL JOIN Book
 ON Author.id_author = Book.id_author;
