@@ -61,20 +61,23 @@ WHERE (h.name = N'Космос'
 GROUP BY rc.name;
 
 -- 5. Дать список последних проживавших клиентов по всем комнатам гостиницы “Космос”, выехавшим в апреле с указанием даты выезда.
+
 SELECT
-	c.name, r.id_room, rib.checkout_date checkout_date
+	c.name, r.number, rib.checkout_date
 FROM
-	room_in_booking rib
+	room r
+	JOIN (SELECT r.id_room, MAX(rib.checkout_date)
+	FROM hotel h
+	JOIN room r ON r.id_hotel = h.id_hotel
+	JOIN room_in_booking rib ON rib.id_room = r.id_room
+	WHERE h.name = N'Космос' AND (rib.checkout_date BETWEEN '2019-04-01' AND '2019-05-01')
+	GROUP BY r.id_room
+		) sub(id_room, checkout_date) ON sub.id_room = r.id_room
+	JOIN room_in_booking rib ON rib.id_room = r.id_room
 	JOIN booking b ON b.id_booking = rib.id_booking
-	JOIN client c on c.id_client = b.id_client
-	JOIN room r ON r.id_room = rib.id_room
-	JOIN hotel h ON h.id_hotel = r.id_hotel
-WHERE
-	h.name = N'Космос'
-	AND rib.checkout_date >= '2019-04-01'
-	AND rib.checkout_date < '2019-05-01'
-	AND rib.checkin_date = (SELECT MAX(rib.checkout_date) WHERE rib.id_room = r.id_room)
-ORDER BY r.id_room, rib.checkout_date DESC;
+	JOIN client c ON c.id_client = b.id_client
+	WHERE sub.checkout_date = rib.checkout_date
+ORDER BY r.number;
 
 -- 6. Продлить на 2 дня дату проживания в гостинице “Космос” всем клиентам комнат категории “Бизнес”, которые заселились 10 мая.
 
@@ -115,40 +118,31 @@ FROM
 	JOIN room_in_booking rib2 ON (
 		rib.id_room = rib2.id_room
 		AND rib.id_booking <> rib2.id_booking
-		AND rib.checkin_date BETWEEN rib2.checkin_date AND rib2.checkout_date
+		AND (rib.checkin_date < rib2.checkout_date AND rib.checkout_date > rib2.checkin_date) 
 	);
 
 SELECT * FROM client
 -- 8. Создать бронирование в транзакции.
 
 BEGIN TRANSACTION
-DECLARE @namevar varchar(30)
-SET @namevar = 'Bill Gates';
-INSERT INTO client (name, phone) VALUES (@namevar, '7(800)555-35-35')
-INSERT INTO booking (id_client, booking_date) VALUES ((SELECT c.id_client FROM client c WHERE name = @namevar), GETDATE())
-INSERT INTO room_in_booking (id_booking, id_room, checkin_date, checkout_date) VALUES (
-	(SELECT 
-		b.id_booking 
-	FROM booking b 
-	JOIN client c ON b.id_client=c.id_client
-	WHERE
-		c.name = @namevar), 42, '2020-05-05', '2020-06-06')
+
+INSERT INTO client (name, phone) VALUES ('John Doe', '7(800)666-36-36')
+INSERT INTO booking (id_client, booking_date) VALUES ((SELECT TOP 1 id_client FROM client ORDER BY 1 DESC), GETDATE())
+INSERT INTO room_in_booking (id_booking, id_room, checkin_date, checkout_date) VALUES ((SELECT TOP 1 id_booking FROM booking ORDER BY 1 DESC), 42, '2020-05-05', '2020-06-06')
 IF @@ERROR <> 0
 	ROLLBACK
 COMMIT;
 
 -- Проверка
--- SELECT * FROM client WHERE name = 'Bill Gates'
--- SELECT * FROM booking WHERE id_client = 86
--- SELECT * FROM room_in_booking WHERE id_booking = 2001
+
+--SELECT * FROM client WHERE name = 'John Doe'
+--SELECT * FROM booking WHERE id_client = 89
+--SELECT * FROM room_in_booking WHERE id_booking = 2004
 
 -- 9. Добавить необходимые индексы для всех таблиц.
 
 CREATE NONCLUSTERED INDEX [IX_client_name]
 ON client (name ASC)
-
-CREATE NONCLUSTERED INDEX [IX_client_phone]
-ON client (phone ASC)
 
 CREATE NONCLUSTERED INDEX [IX_booking_id_client]
 ON booking (id_client ASC)
