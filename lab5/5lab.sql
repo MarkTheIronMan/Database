@@ -126,18 +126,18 @@ SELECT * FROM client
 
 BEGIN TRANSACTION
 
-INSERT INTO client (name, phone) VALUES ('John Doe', '7(800)666-36-36')
-INSERT INTO booking (id_client, booking_date) VALUES ((SELECT TOP 1 id_client FROM client ORDER BY 1 DESC), GETDATE())
-INSERT INTO room_in_booking (id_booking, id_room, checkin_date, checkout_date) VALUES ((SELECT TOP 1 id_booking FROM booking ORDER BY 1 DESC), 42, '2020-05-05', '2020-06-06')
+INSERT INTO client (name, phone) VALUES ('Captain Jack Sparrow', '7(800)777-77-77')
+INSERT INTO booking (id_client, booking_date) VALUES ((SELECT SCOPE_IDENTITY() AS [SCOPE_IDENTITY]), GETDATE())
+INSERT INTO room_in_booking (id_booking, id_room, checkin_date, checkout_date) VALUES ((SELECT SCOPE_IDENTITY() AS [SCOPE_IDENTITY]), 45, '2020-05-05', '2020-06-06')
 IF @@ERROR <> 0
 	ROLLBACK
 COMMIT;
 
 -- Проверка
 
---SELECT * FROM client WHERE name = 'John Doe'
---SELECT * FROM booking WHERE id_client = 89
---SELECT * FROM room_in_booking WHERE id_booking = 2004
+--SELECT * FROM client WHERE name = 'Captain Jack Sparrow'
+--SELECT * FROM booking WHERE id_client = 93
+--SELECT * FROM room_in_booking WHERE id_booking = 2006
 
 -- 9. Добавить необходимые индексы для всех таблиц.
 
