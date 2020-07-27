@@ -37,11 +37,11 @@ AND prod.id_medicine = (SELECT m.id_medicine FROM medicine m WHERE m.name = N'Ко
 --3. Дать список лекарств компании “Фарма”, на которые не были сделаны заказы до 25 января.
 
 SELECT m.name
-FROM medicine m
-JOIN production pr ON pr.id_medicine = m.id_medicine
-WHERE pr.id_company = (SELECT c.id_company FROM company c WHERE c.name = N'Фарма')
-AND pr.id_production IN (SELECT o.id_production FROM [order] o WHERE o.date < CONVERT(DATE, '2019-01-25'))
-GROUP BY m.name;
+FROM company c
+JOIN production p ON c.id_company = p.id_company
+JOIN medicine m ON p.id_medicine = m.id_medicine
+WHERE c.name = 'Фарма'
+AND p.id_production NOT IN (SELECT o.id_production FROM [order] o WHERE o.date < '2019-01-25');
 
 --4. Дать минимальный и максимальный баллы лекарств каждой фирмы, которая оформила не менее 120 заказов.
 
@@ -59,10 +59,11 @@ GROUP BY c.name;
 --5. Дать списки сделавших заказы аптек по всем дилерам компании “AstraZeneca”. Если у дилера нет заказов, в названии аптеки проставить NULL.
 
 SELECT DISTINCT p.name Pharmacy, d.name Dealer, c.name Company
-FROM company c
-INNER JOIN dealer d ON c.id_company = d.id_company
-INNER JOIN [order] o ON d.id_dealer = o.id_dealer
-LEFT JOIN pharmacy p ON o.id_pharmacy = p.id_pharmacy WHERE c.name = 'AstraZeneca'
+FROM dealer d
+JOIN company c ON c.id_company = d.id_company
+LEFT OUTER JOIN [order] o ON d.id_dealer = o.id_dealer
+LEFT OUTER JOIN pharmacy p ON o.id_pharmacy = p.id_pharmacy
+WHERE d.id_company = (SELECT c.id_company FROM company c WHERE c.name = N'AstraZeneca');
 
 --6. Уменьшить на 20% стоимость всех лекарств, если она превышает 3000, а длительность лечения не более 7 дней.
 
